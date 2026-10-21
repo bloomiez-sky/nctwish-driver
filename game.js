@@ -365,10 +365,15 @@ window.addEventListener('keydown', (e) => {
 function bindTouchBtn(id, action) {
     const btn = document.getElementById(id);
     if (!btn) return;
-    btn.addEventListener('pointerdown', (e) => {
-        e.preventDefault();
+
+    const handlePress = (e) => {
+        if (e.cancelable) e.preventDefault();
         action();
-    });
+    };
+
+    // รองรับทั้งระบบสัมผัสบนมือถือ และการคลิกบนคอมฯ
+    btn.addEventListener('touchstart', handlePress, { passive: false });
+    btn.addEventListener('mousedown', handlePress);
 }
 
 function onWindowResize() {
@@ -412,9 +417,16 @@ function startGame() {
 
 // DOM Safe Initialization
 document.addEventListener('DOMContentLoaded', () => {
-    bindTouchBtn('btn-left', () => { if (targetLane > -1) targetLane--; });
-    bindTouchBtn('btn-right', () => { if (targetLane < 1) targetLane--; });
-    bindTouchBtn('btn-nitro', () => { if (nitroAmount > 15) isNitroActive = true; });
+    // กำหนดคำสั่งปุ่มสัมผัส (แก้ไขปุ่มขวาเป็น targetLane++)
+    bindTouchBtn('btn-left', () => { 
+        if (targetLane > -1) targetLane--; 
+    });
+    bindTouchBtn('btn-right', () => { 
+        if (targetLane < 1) targetLane++; // 👈 แก้ไขเป็น ++
+    });
+    bindTouchBtn('btn-nitro', () => { 
+        if (nitroAmount > 15) isNitroActive = true; 
+    });
 
     window.addEventListener('resize', onWindowResize);
 
