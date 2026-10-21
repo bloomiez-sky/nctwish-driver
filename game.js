@@ -1,7 +1,7 @@
 // =========================================================
 // 📌 ล็อค Playlist ID ของคุณที่นี่
 // =========================================================
-const DEFAULT_MEDIA_ID = "PLKoCTEos2wQM"; 
+const DEFAULT_MEDIA_ID = "jfKfPfyJRdk"; 
 
 // 🚫 บล็อกคลิกขวา และปุ่มเปิด DevTools (F12)
 document.addEventListener('contextmenu', event => event.preventDefault());
