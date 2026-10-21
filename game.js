@@ -1,98 +1,101 @@
-// =========================================================
-// 📌 ล็อค Playlist ID ของคุณที่นี่
-// =========================================================
-const DEFAULT_MEDIA_ID = "jfKfPfyJRdk"; 
+const DEFAULT_MEDIA_ID = "PLKoCTEos2wQM"; 
 
-// 🚫 บล็อกคลิกขวา และปุ่มเปิด DevTools (F12)
+// Safety: Disable context menu
 document.addEventListener('contextmenu', event => event.preventDefault());
-document.onkeydown = function (e) {
-    if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) {
-        return false;
-    }
-};
 
-// =========================================================
-// 🎵 YOUTUBE API (WITH AUTO-SKIP FOR BLOCKED VIDEOS)
-// =========================================================
+// YouTube API Handlers Attached directly to Window
 let ytPlayer = null;
 let isVideoReady = false;
 
-function onYouTubeIframeAPIReady() {
-    ytPlayer = new YT.Player('player', {
-        playerVars: {
-            'autoplay': 1,
-            'controls': 1,
-            'modestbranding': 1,
-            'rel': 0,
-            'playsinline': 1
-        },
-        events: {
-            'onReady': onPlayerReady,
-            'onStateChange': onPlayerStateChange,
-            'onError': onPlayerError // 👈 เพิ่มการตรวจจับ Error เพื่อข้ามคลิปที่โดนบล็อก
-        }
-    });
-}
+window.onYouTubeIframeAPIReady = function() {
+    try {
+        ytPlayer = new YT.Player('player', {
+            playerVars: {
+                'autoplay': 1,
+                'controls': 1,
+                'modestbranding': 1,
+                'rel': 0,
+                'playsinline': 1
+            },
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange,
+                'onError': onPlayerError
+            }
+        });
+    } catch(e) {
+        console.warn("YouTube API init error:", e);
+    }
+};
 
 function loadMediaToPlayer(id) {
     if (!ytPlayer || !isVideoReady || !id) return;
-    if (id.startsWith("PL")) {
-        ytPlayer.loadPlaylist({ list: id, listType: 'playlist' });
-    } else {
-        ytPlayer.loadVideoById(id);
+    try {
+        if (id.startsWith("PL")) {
+            ytPlayer.loadPlaylist({ list: id, listType: 'playlist' });
+        } else {
+            ytPlayer.loadVideoById(id);
+        }
+    } catch(e) {
+        console.warn("Media load error:", e);
     }
 }
 
 function onPlayerReady(event) {
     isVideoReady = true;
-    ytPlayer.setVolume(80);
-    loadMediaToPlayer(DEFAULT_MEDIA_ID);
+    try {
+        ytPlayer.setVolume(80);
+        loadMediaToPlayer(DEFAULT_MEDIA_ID);
+    } catch(e) {}
 }
 
-// ข้ามไปเพลงถัดไปทันทีหากเจอวิดีโอที่โดนค่ายเพลงบล็อกห้ามฝังบนเว็บภายนอก
 function onPlayerError(event) {
-    console.warn("YouTube Video Error (Skipping to next):", event.data);
     if (ytPlayer && typeof ytPlayer.nextVideo === 'function') {
-        setTimeout(() => { ytPlayer.nextVideo(); }, 500);
+        setTimeout(() => { try { ytPlayer.nextVideo(); } catch(e){} }, 500);
     }
 }
 
 function onPlayerStateChange(event) {
     const playIcon = document.getElementById('play-icon');
+    if (!playIcon) return;
     if (event.data === YT.PlayerState.PLAYING) {
-        if (playIcon) playIcon.className = "fa-solid fa-pause";
+        playIcon.className = "fa-solid fa-pause";
     } else {
-        if (playIcon) playIcon.className = "fa-solid fa-play";
+        playIcon.className = "fa-solid fa-play";
     }
 }
 
 function togglePlayPause() {
     if (!ytPlayer || !isVideoReady) return;
-    const state = ytPlayer.getPlayerState();
-    if (state === YT.PlayerState.PLAYING) {
-        ytPlayer.pauseVideo();
-    } else {
-        ytPlayer.playVideo();
-    }
+    try {
+        const state = ytPlayer.getPlayerState();
+        if (state === YT.PlayerState.PLAYING) {
+            ytPlayer.pauseVideo();
+        } else {
+            ytPlayer.playVideo();
+        }
+    } catch(e){}
 }
 
-function nextVideo() { if (ytPlayer && isVideoReady && typeof ytPlayer.nextVideo === 'function') ytPlayer.nextVideo(); }
-function prevVideo() { if (ytPlayer && isVideoReady && typeof ytPlayer.previousVideo === 'function') ytPlayer.previousVideo(); }
+function nextVideo() { if (ytPlayer && isVideoReady && typeof ytPlayer.nextVideo === 'function') try{ ytPlayer.nextVideo(); }catch(e){} }
+function prevVideo() { if (ytPlayer && isVideoReady && typeof ytPlayer.previousVideo === 'function') try{ ytPlayer.previousVideo(); }catch(e){} }
 
 function toggleMute() {
     if (!ytPlayer || !isVideoReady) return;
-    const muteIcon = document.getElementById('mute-icon');
-    if (ytPlayer.isMuted()) {
-        ytPlayer.unMute();
-        if (muteIcon) muteIcon.className = "fa-solid fa-volume-high";
-    } else {
-        ytPlayer.mute();
-        if (muteIcon) muteIcon.className = "fa-solid fa-volume-xmark";
-    }
+    try {
+        const muteIcon = document.getElementById('mute-icon');
+        if (ytPlayer.isMuted()) {
+            ytPlayer.unMute();
+            if (muteIcon) muteIcon.className = "fa-solid fa-volume-high";
+        } else {
+            ytPlayer.mute();
+            if (muteIcon) muteIcon.className = "fa-solid fa-volume-xmark";
+        }
+    } catch(e){}
 }
 
 function setVolume(val) {
-    if (ytPlayer && isVideoReady) ytPlayer.setVolume(val);
+    if (ytPlayer && isVideoReady) try{ ytPlayer.setVolume(val); }catch(e){}
 }
 
 function extractPlaylistOrVideoID(url) {
@@ -105,45 +108,43 @@ function extractPlaylistOrVideoID(url) {
     return (match && match[2].length === 11) ? match[2] : url.trim();
 }
 
-// =========================================================
-// 🔊 WEB AUDIO SYNTHESIZER
-// =========================================================
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
+// Audio Synthesizer
+let audioCtx = null;
 function playStarPickupSound(points) {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
 
-    const freqMap = { 1: 523.25, 2: 659.25, 5: 783.99, 10: 1046.50 };
-    const baseFreq = freqMap[points] || 523.25;
+        const freqMap = { 1: 523.25, 2: 659.25, 5: 783.99, 10: 1046.50 };
+        const baseFreq = freqMap[points] || 523.25;
 
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(baseFreq, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, audioCtx.currentTime + 0.15);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(baseFreq, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, audioCtx.currentTime + 0.15);
 
-    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
 
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.15);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.15);
+    } catch(e){}
 }
 
-// =========================================================
-// 🏎️ THREE.JS 3D PASTEL DRIVING ENGINE
-// =========================================================
+// 3D Three.js Engine
 let scene, camera, renderer;
 let playerCar, roadGrid;
 let starsList = [];
 
 const STAR_TIERS = [
-    { points: 1, scale: 0.6, weight: 50, colorHex: 0xFFADAD },  // ⭐ 1 คะแนน = ❤️ แดงพาสเทล
-    { points: 2, scale: 0.85, weight: 30, colorHex: 0xBDB2FF }, // ⭐ 2 คะแนน = 💜 ม่วงพาสเทล
-    { points: 5, scale: 1.15, weight: 15, colorHex: 0xFDFFB6 }, // ⭐ 5 คะแนน = 💛 เหลืองพาสเทล
-    { points: 10, scale: 1.55, weight: 5, colorHex: 0x9BF6FF }  // 🌟 10 คะแนน = 🩵 ฟ้าพาสเทล
+    { points: 1, scale: 0.6, weight: 50, colorHex: 0xFFADAD },
+    { points: 2, scale: 0.85, weight: 30, colorHex: 0xBDB2FF },
+    { points: 5, scale: 1.15, weight: 15, colorHex: 0xFDFFB6 },
+    { points: 10, scale: 1.55, weight: 5, colorHex: 0x9BF6FF }
 ];
 
 let speed = 110;
@@ -159,8 +160,18 @@ let isGameRunning = false;
 
 function initThreeJS() {
     const container = document.getElementById('game-container');
-    const width = container.clientWidth || window.innerWidth;
-    const height = container.clientHeight || (window.innerHeight * 0.7);
+    if (!container) return;
+
+    let width = container.clientWidth || window.innerWidth;
+    let height = container.clientHeight || (window.innerHeight * 0.7);
+
+    if (width === 0) width = window.innerWidth * 0.7;
+    if (height === 0) height = window.innerHeight * 0.7;
+
+    if (typeof THREE === 'undefined') {
+        console.error("Three.js library is missing!");
+        return;
+    }
 
     scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x0f0c1b, 0.012);
@@ -173,6 +184,8 @@ function initThreeJS() {
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setClearColor(0x0f0c1b);
+    
+    container.innerHTML = '';
     container.appendChild(renderer.domElement);
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
@@ -188,7 +201,6 @@ function initThreeJS() {
     roadGrid = gridHelper;
 
     createPastelCar();
-    window.addEventListener('resize', onWindowResize);
 }
 
 function createPastelCar() {
@@ -244,7 +256,7 @@ function createStarMesh(tier) {
 }
 
 function spawnStar() {
-    if (!isGameRunning) return;
+    if (!isGameRunning || !scene) return;
     
     const rand = Math.random() * 100;
     let cum = 0;
@@ -279,7 +291,7 @@ function showFloatingScoreText(points, colorHex) {
 
 let spawnTimer = 0;
 function updateGame(delta) {
-    if (!isGameRunning) return;
+    if (!isGameRunning || !playerCar || !roadGrid) return;
 
     if (isNitroActive && nitroAmount > 0) {
         speed = 170;
@@ -350,24 +362,20 @@ window.addEventListener('keydown', (e) => {
     }
 });
 
-const bindTouchBtn = (id, action) => {
+function bindTouchBtn(id, action) {
     const btn = document.getElementById(id);
     if (!btn) return;
     btn.addEventListener('pointerdown', (e) => {
         e.preventDefault();
         action();
     });
-};
-
-bindTouchBtn('btn-left', () => { if (targetLane > -1) targetLane--; });
-bindTouchBtn('btn-right', () => { if (targetLane < 1) targetLane--; });
-bindTouchBtn('btn-nitro', () => { if (nitroAmount > 15) isNitroActive = true; });
+}
 
 function onWindowResize() {
     const container = document.getElementById('game-container');
-    if (!container) return;
-    const width = container.clientWidth;
-    const height = container.clientHeight;
+    if (!container || !renderer || !camera) return;
+    const width = container.clientWidth || window.innerWidth;
+    const height = container.clientHeight || window.innerHeight;
 
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
@@ -379,24 +387,40 @@ function animate() {
     requestAnimationFrame(animate);
     const delta = clock.getDelta();
     updateGame(delta);
-    renderer.render(scene, camera);
+    if (renderer && scene && camera) {
+        renderer.render(scene, camera);
+    }
 }
 
 function startGame() {
-    const inputUrl = document.getElementById('start-yt-url').value;
+    const inputUrl = document.getElementById('start-yt-url')?.value;
     const extractedId = extractPlaylistOrVideoID(inputUrl) || DEFAULT_MEDIA_ID;
 
     loadMediaToPlayer(extractedId);
 
-    // ปลดล็อกระบบเสียงวิดีโอทันทีที่กดปุ่ม Start
     if (ytPlayer && typeof ytPlayer.playVideo === 'function') {
-        ytPlayer.playVideo();
+        try { ytPlayer.playVideo(); } catch(e){}
     }
 
-    document.getElementById('game-overlay').classList.add('hidden');
+    const overlay = document.getElementById('game-overlay');
+    if (overlay) overlay.classList.add('hidden');
+    
     isGameRunning = true;
+    onWindowResize();
     clock.start();
 }
 
-initThreeJS();
-animate();
+// DOM Safe Initialization
+document.addEventListener('DOMContentLoaded', () => {
+    bindTouchBtn('btn-left', () => { if (targetLane > -1) targetLane--; });
+    bindTouchBtn('btn-right', () => { if (targetLane < 1) targetLane--; });
+    bindTouchBtn('btn-nitro', () => { if (nitroAmount > 15) isNitroActive = true; });
+
+    window.addEventListener('resize', onWindowResize);
+
+    setTimeout(() => {
+        initThreeJS();
+        onWindowResize();
+        animate();
+    }, 100);
+});
