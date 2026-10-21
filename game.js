@@ -1,12 +1,12 @@
 // =========================================================
 // 📌 ล็อค ID PLAYLIST ที่นี่ (เปลี่ยนเป็น Playlist ID ของคุณ)
 // =========================================================
-const FIXED_PLAYLIST_ID = "PLWwAypAcFRgKAORv9_8pD3_cdd5A3M8E6"; // 👈 เปลี่ยนที่นี่!
+const FIXED_PLAYLIST_ID = "xIlFjHHUfI0"; // 👈 เปลี่ยนที่นี่!
 
 // =========================================================
 // 🛡️ DOMAIN LOCK & PROTECTION (ป้องกันคนก๊อปปี้เกม)
 // =========================================================
-const ALLOWED_DOMAIN = "yourusername.github.io"; // 👈 เปลี่ยนเป็นโดเมน GitHub ของคุณ
+const ALLOWED_DOMAIN = "bloomiez-sky.github.io"; // 👈 เปลี่ยนเป็นโดเมน GitHub ของคุณ
 
 if (window.location.hostname !== ALLOWED_DOMAIN && 
     window.location.hostname !== "localhost" && 
