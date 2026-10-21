@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pastel Star Driver - 30/70 Split View</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom Pastel Style Sheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-[#0f0c1b] text-white overflow-hidden select-none w-screen h-screen">
+
+    <!-- MAIN SPLIT SCREEN CONTAINER (30% YOUTUBE / 70% GAMEPLAY) -->
+    <div class="w-full h-full flex flex-col md:flex-row overflow-hidden">
+
+        <!-- ========================================================= -->
+        <!-- 🔴 SECTION 1: YOUTUBE PLAYER AREA (30% SIZE) -->
+        <!-- ========================================================= -->
+        <div class="w-full h-[30vh] md:w-[30vw] md:h-full bg-black relative flex flex-col border-b-2 md:border-b-0 md:border-r-2 border-[#ffc6ff]/30 shadow-2xl flex-none z-20">
+            
+            <!-- YouTube Video Frame (Fills 100% of 30% Area) -->
+            <div class="relative w-full h-full bg-black overflow-hidden crt-overlay">
+                <div id="player" class="w-full h-full pointer-events-auto"></div>
+
+                <!-- Floating Live Badge Overlay -->
+                <div class="absolute top-2 left-2 z-20 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-full border border-[#ffc6ff]/40 text-[9px] text-[#ffc6ff] flex items-center gap-1.5 font-bold">
+                    <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                    BOOSTER DOCK
+                </div>
+            </div>
+
+            <!-- YouTube Music Controls Bar (Glass Overlay at Bottom of 30% Frame) -->
+            <div class="absolute bottom-0 inset-x-0 bg-black/80 backdrop-blur-md p-2 flex items-center justify-between border-t border-white/10 z-20">
+                <div class="flex items-center gap-1.5">
+                    <button onclick="prevVideo()" class="dock-btn"><i class="fa-solid fa-backward-step"></i></button>
+                    <button id="play-pause-btn" onclick="togglePlayPause()" class="dock-btn-primary"><i id="play-icon" class="fa-solid fa-play"></i></button>
+                    <button onclick="nextVideo()" class="dock-btn"><i class="fa-solid fa-forward-step"></i></button>
+                    <button onclick="toggleMute()" class="dock-btn"><i id="mute-icon" class="fa-solid fa-volume-high"></i></button>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <input type="range" id="volume-slider" min="0" max="100" value="80" oninput="setVolume(this.value)" class="w-14 md:w-20 accent-[#ffc6ff] cursor-pointer">
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- 🎮 SECTION 2: 3D GAMEPLAY AREA (70% SIZE) -->
+        <!-- ========================================================= -->
+        <div class="w-full h-[70vh] md:w-[70vw] md:h-full relative flex-1 overflow-hidden bg-[#0f0c1b]">
+            
+            <!-- 3D Canvas Render Target Container -->
+            <div id="game-container" class="absolute inset-0 z-0"></div>
+
+            <!-- Gameplay UI Overlay Layer -->
+            <div class="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between p-3 md:p-5">
+
+                <!-- HUD Header: Score & Stars Breakdown -->
+                <div class="flex justify-between items-start w-full">
+                    
+                    <!-- Score & Nitro Panel -->
+                    <div class="glass-panel p-2.5 md:p-4 rounded-2xl pointer-events-auto flex flex-col gap-1 min-w-[130px] md:min-w-[160px]">
+                        <div class="text-[9px] text-[#ffc6ff] font-black uppercase tracking-widest">Total Score</div>
+                        <div class="text-2xl md:text-3xl font-black text-[#9bf6ff]" id="score-display">00000</div>
+
+                        <!-- Nitro Bar -->
+                        <div class="w-full bg-gray-900/80 h-2 rounded-full overflow-hidden mt-1.5 border border-white/10">
+                            <div id="nitro-bar" class="bg-gradient-to-r from-[#9bf6ff] to-[#ffc6ff] h-full w-0 transition-all duration-150"></div>
+                        </div>
+                        <div class="text-[8px] text-[#9bf6ff] text-right font-bold mt-0.5">[SPACE] NITRO</div>
+                    </div>
+
+                    <!-- Star Tiers Counters Badge Matrix -->
+                    <div class="glass-panel p-2 md:p-3 rounded-2xl pointer-events-auto grid grid-cols-2 gap-1.5 text-[10px] font-bold">
+                        <div class="bg-black/40 px-2 py-1 rounded-lg text-[#ffadad] flex items-center justify-between gap-1"><span>⭐1pt:</span> <span id="star-1-count" class="text-white">0</span></div>
+                        <div class="bg-black/40 px-2 py-1 rounded-lg text-[#bdb2ff] flex items-center justify-between gap-1"><span>⭐2pt:</span> <span id="star-2-count" class="text-white">0</span></div>
+                        <div class="bg-black/40 px-2 py-1 rounded-lg text-[#fdffb6] flex items-center justify-between gap-1"><span>⭐5
