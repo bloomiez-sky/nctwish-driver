@@ -1,12 +1,63 @@
-/* Custom Font & Universal Touch Rules */
 * {
     font-family: 'Quicksand', 'Orbitron', sans-serif;
     user-select: none;
     -webkit-user-select: none;
     touch-action: manipulation;
+    box-sizing: border-box;
 }
 
-/* Glassmorphism Panels */
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #0f0c1b;
+}
+
+/* Fallback split layout in case Tailwind CDN fails or delays */
+.split-container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+@media (max-width: 767px) {
+    .split-container {
+        flex-direction: column;
+    }
+    .yt-section {
+        height: 30vh;
+        width: 100%;
+    }
+    .game-section {
+        height: 70vh;
+        width: 100%;
+    }
+}
+
+@media (min-width: 768px) {
+    .split-container {
+        flex-direction: row;
+    }
+    .yt-section {
+        width: 30vw;
+        height: 100%;
+    }
+    .game-section {
+        width: 70vw;
+        height: 100%;
+    }
+}
+
+#game-container {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
 .glass-panel {
     background: rgba(15, 12, 27, 0.85);
     backdrop-filter: blur(12px);
@@ -15,7 +66,6 @@
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
 }
 
-/* CRT Overlay for YouTube Player */
 .crt-overlay::after {
     content: " ";
     display: block;
@@ -27,7 +77,6 @@
     pointer-events: none;
 }
 
-/* Dock Control Buttons */
 .dock-btn {
     width: 32px;
     height: 32px;
@@ -39,9 +88,6 @@
     justify-content: center;
     font-size: 12px;
     transition: all 0.2s;
-}
-.dock-btn:hover {
-    background: rgba(255, 255, 255, 0.25);
 }
 
 .dock-btn-primary {
@@ -58,7 +104,6 @@
     transition: all 0.2s;
 }
 
-/* Ergonomic Touch Steering Controls for Mobile & iPad */
 .touch-btn {
     width: 64px;
     height: 64px;
@@ -72,12 +117,12 @@
     border: 2px solid rgba(255, 255, 255, 0.4);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
+
 .touch-btn:active {
     transform: scale(0.92);
     opacity: 0.9;
 }
 
-/* Floating Points Animations (+1, +2, +5, +10) */
 .floating-score {
     position: absolute;
     font-weight: 900;
