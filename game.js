@@ -1,25 +1,7 @@
 // =========================================================
-// 📌 ล็อค ID PLAYLIST ที่นี่ (เปลี่ยนเป็น Playlist ID ของคุณ)
+// 📌 ล็อค Playlist ID ของคุณที่นี่
 // =========================================================
-const FIXED_PLAYLIST_ID = "PLKoCTEos2wQM"; // 👈 เปลี่ยนที่นี่!
-
-// =========================================================
-// 🛡️ DOMAIN LOCK & PROTECTION (ป้องกันคนก๊อปปี้เกม)
-// =========================================================
-// const ALLOWED_DOMAIN = "bloomiez-sky.github.io"; // 👈 เปลี่ยนเป็นโดเมน GitHub ของคุณ
-
-// if (window.location.hostname !== ALLOWED_DOMAIN && 
-//     window.location.hostname !== "localhost" && 
-//     window.location.hostname !== "127.0.0.1" && 
-//     window.location.hostname !== "") {
-//     document.body.innerHTML = `
-//         <div style="background:#0f0c1b; color:#ffc6ff; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:sans-serif; text-align:center; padding:20px;">
-//             <h1 style="font-size:2rem; margin-bottom:10px;">⚠️ Unauthorized Domain Deployment</h1>
-//             <p style="color:#a0a0b0; max-width:400px;">เกมนี้ได้รับการคุ้มครองและอนุญาตให้เปิดใช้งานบนโดเมน <b>${ALLOWED_DOMAIN}</b> เท่านั้น</p>
-//         </div>
-//     `;
-//     throw new Error("Unauthorized domain deployment blocked.");
-// }
+const DEFAULT_MEDIA_ID = "PLKoCTEos2wQM"; 
 
 // 🚫 บล็อกคลิกขวา และปุ่มเปิด DevTools (F12)
 document.addEventListener('contextmenu', event => event.preventDefault());
@@ -30,7 +12,7 @@ document.onkeydown = function (e) {
 };
 
 // =========================================================
-// 🎵 YOUTUBE PLAYLIST API (30% FULL AREA FILL)
+// 🎵 YOUTUBE API (WITH AUTO-SKIP FOR BLOCKED VIDEOS)
 // =========================================================
 let ytPlayer = null;
 let isVideoReady = false;
@@ -46,27 +28,41 @@ function onYouTubeIframeAPIReady() {
         },
         events: {
             'onReady': onPlayerReady,
-            'onStateChange': onPlayerStateChange
+            'onStateChange': onPlayerStateChange,
+            'onError': onPlayerError // 👈 เพิ่มการตรวจจับ Error เพื่อข้ามคลิปที่โดนบล็อก
         }
     });
+}
+
+function loadMediaToPlayer(id) {
+    if (!ytPlayer || !isVideoReady || !id) return;
+    if (id.startsWith("PL")) {
+        ytPlayer.loadPlaylist({ list: id, listType: 'playlist' });
+    } else {
+        ytPlayer.loadVideoById(id);
+    }
 }
 
 function onPlayerReady(event) {
     isVideoReady = true;
     ytPlayer.setVolume(80);
-    // Auto Load Fixed Playlist
-    ytPlayer.loadPlaylist({
-        list: FIXED_PLAYLIST_ID, // <<<< ใส่ Playlist ที่นี้
-        listType: 'playlist'
-    });
+    loadMediaToPlayer(DEFAULT_MEDIA_ID);
+}
+
+// ข้ามไปเพลงถัดไปทันทีหากเจอวิดีโอที่โดนค่ายเพลงบล็อกห้ามฝังบนเว็บภายนอก
+function onPlayerError(event) {
+    console.warn("YouTube Video Error (Skipping to next):", event.data);
+    if (ytPlayer && typeof ytPlayer.nextVideo === 'function') {
+        setTimeout(() => { ytPlayer.nextVideo(); }, 500);
+    }
 }
 
 function onPlayerStateChange(event) {
     const playIcon = document.getElementById('play-icon');
     if (event.data === YT.PlayerState.PLAYING) {
-        playIcon.className = "fa-solid fa-pause";
+        if (playIcon) playIcon.className = "fa-solid fa-pause";
     } else {
-        playIcon.className = "fa-solid fa-play";
+        if (playIcon) playIcon.className = "fa-solid fa-play";
     }
 }
 
@@ -80,18 +76,18 @@ function togglePlayPause() {
     }
 }
 
-function nextVideo() { if (ytPlayer && isVideoReady) ytPlayer.nextVideo(); }
-function prevVideo() { if (ytPlayer && isVideoReady) ytPlayer.previousVideo(); }
+function nextVideo() { if (ytPlayer && isVideoReady && typeof ytPlayer.nextVideo === 'function') ytPlayer.nextVideo(); }
+function prevVideo() { if (ytPlayer && isVideoReady && typeof ytPlayer.previousVideo === 'function') ytPlayer.previousVideo(); }
 
 function toggleMute() {
     if (!ytPlayer || !isVideoReady) return;
     const muteIcon = document.getElementById('mute-icon');
     if (ytPlayer.isMuted()) {
         ytPlayer.unMute();
-        muteIcon.className = "fa-solid fa-volume-high";
+        if (muteIcon) muteIcon.className = "fa-solid fa-volume-high";
     } else {
         ytPlayer.mute();
-        muteIcon.className = "fa-solid fa-volume-xmark";
+        if (muteIcon) muteIcon.className = "fa-solid fa-volume-xmark";
     }
 }
 
@@ -102,12 +98,11 @@ function setVolume(val) {
 function extractPlaylistOrVideoID(url) {
     if (!url) return null;
     const playlistMatch = url.match(/[&?]list=([^&]+)/);
-    if (playlistMatch) return { type: 'playlist', id: playlistMatch[1] };
+    if (playlistMatch) return playlistMatch[1];
     
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
     const match = url.match(regExp);
-    const videoId = (match && match[2].length === 11) ? match[2] : url.trim();
-    return { type: 'video', id: videoId };
+    return (match && match[2].length === 11) ? match[2] : url.trim();
 }
 
 // =========================================================
@@ -138,26 +133,17 @@ function playStarPickupSound(points) {
 }
 
 // =========================================================
-// 🏎️ THREE.JS 3D PASTEL DRIVING ENGINE (70% AREA RENDER)
+// 🏎️ THREE.JS 3D PASTEL DRIVING ENGINE
 // =========================================================
 let scene, camera, renderer;
 let playerCar, roadGrid;
 let starsList = [];
 
-const PASTEL_COLORS = [
-    0xBDB2FF, // Lavender 💜
-    0xFFADAD, // Coral Red ❤️
-    0x9BF6FF, // Sky Blue 🩵
-    0xB5EAD7, // Mint Green 💚
-    0xFDFFB6, // Lemon Yellow 💛
-    0xFFC6FF  // Rose Pink 🩷
-];
-
 const STAR_TIERS = [
-    { points: 1, scale: 0.6, weight: 50 },
-    { points: 2, scale: 0.85, weight: 30 },
-    { points: 5, scale: 1.15, weight: 15 },
-    { points: 10, scale: 1.55, weight: 5 }
+    { points: 1, scale: 0.6, weight: 50, colorHex: 0xFFADAD },  // ⭐ 1 คะแนน = ❤️ แดงพาสเทล
+    { points: 2, scale: 0.85, weight: 30, colorHex: 0xBDB2FF }, // ⭐ 2 คะแนน = 💜 ม่วงพาสเทล
+    { points: 5, scale: 1.15, weight: 15, colorHex: 0xFDFFB6 }, // ⭐ 5 คะแนน = 💛 เหลืองพาสเทล
+    { points: 10, scale: 1.55, weight: 5, colorHex: 0x9BF6FF }  // 🌟 10 คะแนน = 🩵 ฟ้าพาสเทล
 ];
 
 let speed = 110;
@@ -173,11 +159,36 @@ let isGameRunning = false;
 
 function initThreeJS() {
     const container = document.getElementById('game-container');
-    const width = container.clientWidth;   // ดึงความกว้างจริงของฝั่ง 70%
-    const height = container.clientHeight; // ดึงความสูงจริงของฝั่ง 70%
+    const width = container.clientWidth || window.innerWidth;
+    const height = container.clientHeight || (window.innerHeight * 0.7);
+
+    scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x0f0c1b, 0.012);
 
     camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
+    camera.position.set(0, 5.5, 9.0);
+    camera.lookAt(0, 1.0, -10);
+
+    renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x0f0c1b);
+    container.appendChild(renderer.domElement);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffc6ff, 1.2);
+    dirLight.position.set(0, 20, -10);
+    scene.add(dirLight);
+
+    const gridHelper = new THREE.GridHelper(100, 30, 0xffc6ff, 0x3d2b56);
+    gridHelper.position.set(0, 0, -30);
+    scene.add(gridHelper);
+    roadGrid = gridHelper;
+
+    createPastelCar();
+    window.addEventListener('resize', onWindowResize);
 }
 
 function createPastelCar() {
@@ -225,11 +236,10 @@ function createStarMesh(tier) {
     const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
     geo.center();
 
-    const randomColor = PASTEL_COLORS[Math.floor(Math.random() * PASTEL_COLORS.length)];
-    const mat = new THREE.MeshStandardMaterial({ color: randomColor, metalness: 0.2, roughness: 0.2 });
+    const mat = new THREE.MeshStandardMaterial({ color: tier.colorHex, metalness: 0.2, roughness: 0.2 });
     const mesh = new THREE.Mesh(geo, mat);
 
-    mesh.userData = { points: tier.points, colorHex: '#' + randomColor.toString(16) };
+    mesh.userData = { points: tier.points, colorHex: '#' + tier.colorHex.toString(16) };
     return mesh;
 }
 
@@ -256,11 +266,11 @@ function spawnStar() {
 
 function showFloatingScoreText(points, colorHex) {
     const container = document.getElementById('game-container');
+    if (!container) return;
     const el = document.createElement('div');
     el.className = 'floating-score';
     el.innerText = `+${points}`;
     el.style.color = colorHex;
-    // คำนวณตำแหน่งพิกัดให้อยู่ในฝั่ง 70%
     el.style.left = `${container.clientWidth / 2 + (targetLane * 50)}px`;
     el.style.top = `${container.clientHeight / 2 + 30}px`;
     container.appendChild(el);
@@ -280,7 +290,8 @@ function updateGame(delta) {
         if (nitroAmount < 100) nitroAmount += delta * 12;
     }
 
-    document.getElementById('nitro-bar').style.width = `${Math.max(0, nitroAmount)}%`;
+    const nitroBar = document.getElementById('nitro-bar');
+    if (nitroBar) nitroBar.style.width = `${Math.max(0, nitroAmount)}%`;
 
     const targetX = targetLane * laneWidth;
     currentCarX += (targetX - currentCarX) * 0.18;
@@ -308,8 +319,10 @@ function updateGame(delta) {
             score += pts;
             starCounts[pts] = (starCounts[pts] || 0) + 1;
 
-            document.getElementById('score-display').innerText = String(score).padStart(5, '0');
-            document.getElementById(`star-${pts}-count`).innerText = starCounts[pts];
+            const scoreDisp = document.getElementById('score-display');
+            const starCountDisp = document.getElementById(`star-${pts}-count`);
+            if (scoreDisp) scoreDisp.innerText = String(score).padStart(5, '0');
+            if (starCountDisp) starCountDisp.innerText = starCounts[pts];
 
             playStarPickupSound(pts);
             showFloatingScoreText(pts, star.userData.colorHex);
@@ -326,7 +339,7 @@ function updateGame(delta) {
     }
 }
 
-// Keyboard Listeners
+// Controls
 window.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
         if (targetLane > -1) targetLane--;
@@ -337,7 +350,6 @@ window.addEventListener('keydown', (e) => {
     }
 });
 
-// Touch Controls for Mobile / iPad
 const bindTouchBtn = (id, action) => {
     const btn = document.getElementById(id);
     if (!btn) return;
@@ -348,10 +360,9 @@ const bindTouchBtn = (id, action) => {
 };
 
 bindTouchBtn('btn-left', () => { if (targetLane > -1) targetLane--; });
-bindTouchBtn('btn-right', () => { if (targetLane < 1) targetLane++; });
+bindTouchBtn('btn-right', () => { if (targetLane < 1) targetLane--; });
 bindTouchBtn('btn-nitro', () => { if (nitroAmount > 15) isNitroActive = true; });
 
-// Responsive Resizing strictly for the 70% container
 function onWindowResize() {
     const container = document.getElementById('game-container');
     if (!container) return;
@@ -373,14 +384,13 @@ function animate() {
 
 function startGame() {
     const inputUrl = document.getElementById('start-yt-url').value;
-    const result = extractPlaylistOrVideoID(inputUrl) || { type: 'playlist', id: FIXED_PLAYLIST_ID };
+    const extractedId = extractPlaylistOrVideoID(inputUrl) || DEFAULT_MEDIA_ID;
 
-    if (ytPlayer && isVideoReady) {
-        if (result.type === 'playlist') {
-            ytPlayer.loadPlaylist({ list: result.id, listType: 'playlist' });
-        } else {
-            ytPlayer.loadVideoById(result.id);
-        }
+    loadMediaToPlayer(extractedId);
+
+    // ปลดล็อกระบบเสียงวิดีโอทันทีที่กดปุ่ม Start
+    if (ytPlayer && typeof ytPlayer.playVideo === 'function') {
+        ytPlayer.playVideo();
     }
 
     document.getElementById('game-overlay').classList.add('hidden');
@@ -388,6 +398,5 @@ function startGame() {
     clock.start();
 }
 
-// Initialize ThreeJS Engine
 initThreeJS();
 animate();
