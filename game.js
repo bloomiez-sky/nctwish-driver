@@ -1,25 +1,25 @@
 // =========================================================
 // 📌 ล็อค ID PLAYLIST ที่นี่ (เปลี่ยนเป็น Playlist ID ของคุณ)
 // =========================================================
-const FIXED_PLAYLIST_ID = "xIlFjHHUfI0"; // 👈 เปลี่ยนที่นี่!
+const FIXED_PLAYLIST_ID = "PLKoCTEos2wQM"; // 👈 เปลี่ยนที่นี่!
 
 // =========================================================
 // 🛡️ DOMAIN LOCK & PROTECTION (ป้องกันคนก๊อปปี้เกม)
 // =========================================================
-const ALLOWED_DOMAIN = "bloomiez-sky.github.io"; // 👈 เปลี่ยนเป็นโดเมน GitHub ของคุณ
+// const ALLOWED_DOMAIN = "bloomiez-sky.github.io"; // 👈 เปลี่ยนเป็นโดเมน GitHub ของคุณ
 
-if (window.location.hostname !== ALLOWED_DOMAIN && 
-    window.location.hostname !== "localhost" && 
-    window.location.hostname !== "127.0.0.1" && 
-    window.location.hostname !== "") {
-    document.body.innerHTML = `
-        <div style="background:#0f0c1b; color:#ffc6ff; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:sans-serif; text-align:center; padding:20px;">
-            <h1 style="font-size:2rem; margin-bottom:10px;">⚠️ Unauthorized Domain Deployment</h1>
-            <p style="color:#a0a0b0; max-width:400px;">เกมนี้ได้รับการคุ้มครองและอนุญาตให้เปิดใช้งานบนโดเมน <b>${ALLOWED_DOMAIN}</b> เท่านั้น</p>
-        </div>
-    `;
-    throw new Error("Unauthorized domain deployment blocked.");
-}
+// if (window.location.hostname !== ALLOWED_DOMAIN && 
+//     window.location.hostname !== "localhost" && 
+//     window.location.hostname !== "127.0.0.1" && 
+//     window.location.hostname !== "") {
+//     document.body.innerHTML = `
+//         <div style="background:#0f0c1b; color:#ffc6ff; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:sans-serif; text-align:center; padding:20px;">
+//             <h1 style="font-size:2rem; margin-bottom:10px;">⚠️ Unauthorized Domain Deployment</h1>
+//             <p style="color:#a0a0b0; max-width:400px;">เกมนี้ได้รับการคุ้มครองและอนุญาตให้เปิดใช้งานบนโดเมน <b>${ALLOWED_DOMAIN}</b> เท่านั้น</p>
+//         </div>
+//     `;
+//     throw new Error("Unauthorized domain deployment blocked.");
+// }
 
 // 🚫 บล็อกคลิกขวา และปุ่มเปิด DevTools (F12)
 document.addEventListener('contextmenu', event => event.preventDefault());
