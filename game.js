@@ -6,6 +6,9 @@ document.addEventListener('contextmenu', event => event.preventDefault());
 // YouTube API Handlers Attached directly to Window
 let ytPlayer = null;
 let isVideoReady = false;
+let songsPlayedCount = 0;
+let playlistLoopCount = 1;
+let currentVideoId = "";
 
 window.onYouTubeIframeAPIReady = function() {
     try {
@@ -57,11 +60,32 @@ function onPlayerError(event) {
 
 function onPlayerStateChange(event) {
     const playIcon = document.getElementById('play-icon');
-    if (!playIcon) return;
+    
     if (event.data === YT.PlayerState.PLAYING) {
-        playIcon.className = "fa-solid fa-pause";
+        if (playIcon) playIcon.className = "fa-solid fa-pause";
+
+        // ตรวจจับเมื่อมีการเล่นเพลงใหม่
+        try {
+            const videoData = ytPlayer.getVideoData();
+            const videoId = videoData ? videoData.video_id : '';
+            
+            if (videoId && videoId !== currentVideoId) {
+                currentVideoId = videoId;
+                songsPlayedCount++;
+                
+                const songsElem = document.getElementById('songs-played-count');
+                if (songsElem) songsElem.innerText = `${songsPlayedCount} เพลง`;
+
+                // เช็คว่ากลับมาเพลงแรกใน Playlist หรือยัง (นับรอบ)
+                if (typeof ytPlayer.getPlaylistIndex === 'function' && ytPlayer.getPlaylistIndex() === 0 && songsPlayedCount > 1) {
+                    playlistLoopCount++;
+                    const loopElem = document.getElementById('song-loops-count');
+                    if (loopElem) loopElem.innerText = `${playlistLoopCount} รอบ`;
+                }
+            }
+        } catch(e) {}
     } else {
-        playIcon.className = "fa-solid fa-play";
+        if (playIcon) playIcon.className = "fa-solid fa-play";
     }
 }
 
@@ -403,8 +427,13 @@ function startGame() {
 
     loadMediaToPlayer(extractedId);
 
+    // 🔴 เพิ่มการสั่ง unMute และ playVideo ตรงนี้
     if (ytPlayer && typeof ytPlayer.playVideo === 'function') {
-        try { ytPlayer.playVideo(); } catch(e){}
+        try { 
+            ytPlayer.unMute();   // ปลดล็อก Mute บนคอม
+            ytPlayer.setVolume(80);
+            ytPlayer.playVideo(); // สั่งเล่นเพลง
+        } catch(e){}
     }
 
     const overlay = document.getElementById('game-overlay');
